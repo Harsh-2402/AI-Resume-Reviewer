@@ -71,7 +71,7 @@ The system is a **6-agent LangGraph StateGraph** with an autonomous refinement l
 ### 1 — Clone
 
 ```bash
-git clone https://github.com/<your-username>/AI-Resume-Reviewer.git
+git clone https://github.com/Harsh-2402/AI-Resume-Reviewer.git
 cd AI-Resume-Reviewer
 ```
 
