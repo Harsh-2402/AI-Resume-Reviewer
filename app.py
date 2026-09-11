@@ -30,7 +30,9 @@ def get_gemini_client():
         return None
     return genai.Client(api_key=api_key)
 
-GEMINI_MODEL = "gemini-2.5-flash"
+#GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
+
 
 def call_gemini(prompt: str) -> str:
     client = get_gemini_client()
