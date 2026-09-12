@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "streamlit",
+      "runtimeExecutable": "venv/bin/streamlit",
+      "runtimeArgs": [
+        "run",
+        "app.py",
+        "--server.port",
+        "8501",
+        "--server.headless",
+        "true",
+        "--browser.gatherUsageStats",
+        "false"
+      ],
+      "port": 8501
+    },
+    {
+      "name": "streamlit-fake",
+      "runtimeExecutable": "venv/bin/streamlit",
+      "runtimeArgs": [
+        "run",
+        "/private/tmp/claude-501/-Users-harsh-Desktop-GIT-AI-Resume-Reviewer/e9a48630-c90c-4998-90c4-d17fd143c4b7/scratchpad/app_fake.py",
+        "--server.port",
+        "8502",
+        "--server.headless",
+        "true",
+        "--browser.gatherUsageStats",
+        "false"
+      ],
+      "port": 8502
+    }
+  ]
+}
