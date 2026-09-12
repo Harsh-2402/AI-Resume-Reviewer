@@ -20,7 +20,7 @@ def render_summary(results: list[CandidateResult], stats: dict, report_bytes: by
     st.markdown("## Evaluation complete")
     counts = stats.get("classifications", {})
     cols = st.columns(len(classification_order()) + 1)
-    cols[0].metric("Candidates evaluated", stats.get("ranked", len(ranked)))
+    cols[0].metric("Evaluated", stats.get("ranked", len(ranked)))
     short = {"Exceptional Internship Candidate": "Exceptional", "Strong Internship Candidate": "Strong",
              "Good Internship Candidate": "Good", "Potential / Review": "Potential", "Weak Match": "Weak", "Low Match": "Low"}
     for i, label in enumerate(classification_order(), start=1):

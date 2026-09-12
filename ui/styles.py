@@ -8,13 +8,15 @@ CSS = """
 .stage-warn { color: #d97706; } .stage-fail { color: #dc2626; } .stage-skip { color: #9ca3af; }
 .log-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; line-height: 1.5;
            background: #0f172a; color: #e2e8f0; padding: 0.75rem 1rem; border-radius: 8px; max-height: 320px; overflow-y: auto; white-space: pre; }
-.card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 0.75rem; background: #fff; }
-.card h4 { margin: 0 0 0.25rem 0; }
+.card { border: 1px solid rgba(128,128,128,0.35); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 0.75rem;
+        background: var(--secondary-background-color, #f8fafc); color: var(--text-color, #111827); }
+.card h4 { margin: 0 0 0.25rem 0; color: inherit; }
+.card ul { margin: 0.2rem 0 0.6rem 1.1rem; padding: 0; } .card p { margin: 0.4rem 0; }
 .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; margin-right: 0.35rem; }
 .badge-green { background: #dcfce7; color: #166534; } .badge-lime { background: #ecfccb; color: #3f6212; }
 .badge-yellow { background: #fef9c3; color: #854d0e; } .badge-orange { background: #ffedd5; color: #9a3412; }
 .badge-red { background: #fee2e2; color: #991b1b; } .badge-gray { background: #f3f4f6; color: #374151; }
-.muted { color: #6b7280; font-size: 0.85rem; }
+.muted { color: #8b93a1; font-size: 0.85rem; }
 .score-big { font-size: 2rem; font-weight: 700; line-height: 1; }
 </style>
 """
