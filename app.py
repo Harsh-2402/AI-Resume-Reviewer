@@ -142,23 +142,27 @@ main = st.empty().container()
 
 if phase == "setup":
   with main:
-    st.title("AI Internship Candidate Evaluation & Ranking")
-    st.markdown(
-        "Upload a **job description** and a **ZIP of PDF resumes**. Every candidate is analyzed independently by a "
-        "LangGraph pipeline — education, coursework, skills, projects, certifications, achievements, GitHub evidence — "
-        "then scored deterministically, ranked, and exported to a multi-sheet Excel report."
-    )
-    c1, c2, c3 = st.columns(3)
-    c1.markdown("**Evidence over experience**  \nStudents are scored on demonstrated potential: projects, coursework, certifications, GitHub — not years of experience.")
-    c2.markdown("**Explainable & fair**  \nEvery score has a written reason. Missing information is neutral, never a penalty. No demographic signals are used.")
-    c3.markdown("**Resilient batches**  \nInvalid PDFs, broken links, missing GitHub profiles or API limits never stop the batch.")
-    st.markdown("""
+    # Kept to exactly two top-level elements: the running phase writes its title + dashboard into the same
+    # two slots, so nothing from this page lingers on screen while the evaluation blocks the script.
+    st.markdown("""# AI Internship Candidate Evaluation & Ranking
+
+Upload a **job description** and a **ZIP of PDF resumes**. Every candidate is analyzed independently by a
+LangGraph pipeline — education, coursework, skills, projects, certifications, achievements, GitHub evidence —
+then scored deterministically, ranked, and exported to a multi-sheet Excel report.
+
+<div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin:0.5rem 0 1rem 0">
+<div style="flex:1;min-width:200px"><b>Evidence over experience</b><br>Students are scored on demonstrated potential: projects, coursework, certifications, GitHub — not years of experience.</div>
+<div style="flex:1;min-width:200px"><b>Explainable &amp; fair</b><br>Every score has a written reason. Missing information is neutral, never a penalty. No demographic signals are used.</div>
+<div style="flex:1;min-width:200px"><b>Resilient batches</b><br>Invalid PDFs, broken links, missing GitHub profiles or API limits never stop the batch.</div>
+</div>
+
 ```
 START ─► JD Analyzer ─► ZIP Extractor ─► Send ×N (parallel, independent)
    per candidate: Parser ─► Extractor ─► [Education | Skills | Projects | Certifications | Achievements | GitHub]
                                        ─► Evidence Validator ─► Internship Scorer ─► Candidate Evaluator
                                                 ─► Ranking Engine ─► Excel Report ─► END
-```""")
+```
+""", unsafe_allow_html=True)
     st.info("Fill in the sidebar and click **Start Evaluation**.")
 
 elif phase == "running":
