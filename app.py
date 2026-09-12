@@ -20,7 +20,7 @@ from ui.results import (
     render_summary,
     render_top_candidates,
 )
-from ui.styles import inject_css
+from ui.styles import inject_css, inject_tab_resize_fix
 from utils.validation import validate_batch_inputs
 from workflow.batch_graph import stream_batch
 from workflow.events import ProgressEvent
@@ -200,6 +200,7 @@ elif phase == "done":
         jd = JobProfile.model_validate(final.get("jd_profile") or {})
         stats = final.get("stats", {})
         render_summary(results, stats, final.get("report_bytes", b""), final.get("report_filename", "report.xlsx"))
+        inject_tab_resize_fix()
         tabs = st.tabs(["🏆 Top candidates", "📊 All rankings", "🔍 Candidate details", "⚖️ Compare", "🧾 Processing log", "📋 Job profile"])
         with tabs[0]:
             render_top_candidates(results)

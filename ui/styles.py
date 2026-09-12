@@ -40,6 +40,30 @@ def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
 
+_TAB_RESIZE_FIX = """<script>
+(function () {
+  const p = window.parent;
+  if (p.__tabResizeFix) return;
+  p.__tabResizeFix = true;
+  const nudge = function () { p.dispatchEvent(new Event('resize')); };
+  p.document.addEventListener('click', function (e) {
+    if (e.target && e.target.closest && e.target.closest('[role="tab"]')) {
+      [60, 400].forEach(function (ms) { setTimeout(nudge, ms); });
+    }
+  }, true);
+  [500, 1500, 3000].forEach(function (ms) { setTimeout(nudge, ms); });  // covers clicks made before this loaded
+})();
+</script>"""
+
+
+def inject_tab_resize_fix() -> None:
+    """Dataframes inside tabs that were hidden on first render paint only their first column until the
+    window resizes (glide-data-grid measures the hidden panel at 0px). Nudge it on every tab switch."""
+    import streamlit.components.v1 as components
+
+    components.html(_TAB_RESIZE_FIX, height=0)
+
+
 def badge(text: str, cls: str) -> str:
     return f'<span class="badge {cls}">{text}</span>'
 
