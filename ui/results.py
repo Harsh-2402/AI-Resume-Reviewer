@@ -299,16 +299,18 @@ def render_comparison(results: list[CandidateResult]) -> None:
     if not chosen:
         return
     keys = list(config.COMPONENT_LABELS.keys())
-    rows = []
+    score_rows = []
     for key, label in [("overall", "Overall Score")] + [(k, config.COMPONENT_LABELS[k]) for k in keys]:
         row = {"Metric": label}
         for cid in chosen:
             r = next(x for x in ranked if x.candidate_id == cid)
             row[labels[cid]] = r.scorecard.overall_score if key == "overall" else r.scorecard.score_of(key)
-        rows.append(row)
+        score_rows.append(row)
+    st.dataframe(pd.DataFrame(score_rows), hide_index=True, width="stretch")
+    cat_rows = []
     for label, attr in [("Classification", "classification"), ("Recommendation", "recommendation"), ("Evidence confidence", "evidence_confidence")]:
-        rows.append({"Metric": label, **{labels[c]: getattr(next(x for x in ranked if x.candidate_id == c).scorecard, attr) for c in chosen}})
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+        cat_rows.append({"Metric": label, **{labels[c]: getattr(next(x for x in ranked if x.candidate_id == c).scorecard, attr) for c in chosen}})
+    st.dataframe(pd.DataFrame(cat_rows), hide_index=True, width="stretch")
 
 
 def render_processing_log(results: list[CandidateResult], zip_summary: str, skipped: list[tuple[str, str]]) -> None:
