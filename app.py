@@ -1,6 +1,8 @@
 """AI Internship Candidate Evaluation & Ranking Platform — Streamlit entry point."""
+import queue
 import shutil
 import tempfile
+import threading
 
 import streamlit as st
 
@@ -171,16 +173,40 @@ elif phase == "running":
     extraction = st.session_state["extraction"]
     inputs = [{"candidate_id": f.candidate_id, "resume_file": f.filename, "file_path": f.path, "duplicate_of": f.duplicate_of}
               for f in extraction.files]
-    dashboard = ProgressDashboard(st.container(), inputs, st.session_state["jd_source"], extraction.summary)
+    settings, jd_text = st.session_state["settings"], st.session_state["jd_text"]
+    dashboard = ProgressDashboard(st.container(), inputs, st.session_state["jd_source"], extraction.summary,
+                                  max_concurrent=int(settings.get("max_concurrent_candidates") or config.MAX_CONCURRENT_CANDIDATES))
     final = None
-    try:
-        for item in stream_batch(st.session_state["jd_text"], inputs, st.session_state["settings"]):
-            if isinstance(item, ProgressEvent):
-                dashboard.handle(item)
-            else:
-                final = item
-    except Exception as exc:  # noqa: BLE001 — surface, never hang
-        st.session_state["run_error"] = f"{type(exc).__name__}: {exc}"
+
+    # The graph runs in a worker thread so the main thread (the only one allowed to touch Streamlit or
+    # session_state) can keep the dashboard alive during long Gemini calls that emit no events.
+    events: queue.Queue = queue.Queue()
+    DONE = object()
+
+    def run_graph() -> None:
+        try:
+            for item in stream_batch(jd_text, inputs, settings):
+                events.put(item)
+        except Exception as exc:  # noqa: BLE001 — surface, never hang
+            events.put(exc)
+        finally:
+            events.put(DONE)
+
+    threading.Thread(target=run_graph, name="batch-graph", daemon=True).start()
+    while True:
+        try:
+            item = events.get(timeout=1.0)
+        except queue.Empty:
+            dashboard.heartbeat()
+            continue
+        if item is DONE:
+            break
+        if isinstance(item, ProgressEvent):
+            dashboard.handle(item)
+        elif isinstance(item, Exception):
+            st.session_state["run_error"] = f"{type(item).__name__}: {item}"
+        else:
+            final = item
     dashboard.render(force=True)
     if final is None and not st.session_state["run_error"]:
         st.session_state["run_error"] = "The workflow ended without producing results."
