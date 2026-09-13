@@ -12,6 +12,19 @@ class DocumentExtractionError(Exception):
     pass
 
 
+RESUME_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+
+
+def resume_skip_reason(filename: str) -> str:
+    """Empty string if the file type is accepted as a resume, otherwise a human-readable reason."""
+    suffix = Path(filename).suffix.lower()
+    if suffix in RESUME_EXTENSIONS:
+        return ""
+    if suffix == ".doc":
+        return "legacy .doc format — save as .docx or PDF"
+    return f"unsupported file type ({suffix or 'no extension'})"
+
+
 def extract_pdf_text(source: str | bytes) -> tuple[str, list[str]]:
     """Return (text, warnings). Raises DocumentExtractionError for unreadable files."""
     warnings: list[str] = []
@@ -57,6 +70,31 @@ def extract_docx_text(source: str | bytes) -> str:
     return clean_text("\n".join(parts))
 
 
+def _decode_text(data: bytes) -> str:
+    for encoding in ("utf-8", "utf-16", "latin-1"):
+        try:
+            return clean_text(data.decode(encoding))
+        except UnicodeDecodeError:
+            continue
+    raise DocumentExtractionError("Could not decode text file")
+
+
+def extract_resume_text(path: str) -> tuple[str, list[str]]:
+    """Return (text, warnings) for a resume file of any supported type."""
+    suffix = Path(path).suffix.lower()
+    if suffix == ".pdf":
+        return extract_pdf_text(path)
+    data = Path(path).read_bytes()
+    if suffix == ".docx":
+        text = extract_docx_text(data)
+    elif suffix in (".txt", ".md"):
+        text = _decode_text(data)
+    else:
+        raise DocumentExtractionError(f"Unsupported file type: {suffix}")
+    warnings = [] if len(text) >= config.MIN_RESUME_CHARS else ["Little or no extractable text; analysis will be limited"]
+    return text, warnings
+
+
 def extract_document_text(data: bytes, filename: str) -> str:
     """JD/document text from PDF, DOCX or TXT bytes."""
     suffix = Path(filename).suffix.lower()
@@ -66,10 +104,5 @@ def extract_document_text(data: bytes, filename: str) -> str:
     if suffix == ".docx":
         return extract_docx_text(data)
     if suffix in (".txt", ".md", ""):
-        for encoding in ("utf-8", "utf-16", "latin-1"):
-            try:
-                return clean_text(data.decode(encoding))
-            except UnicodeDecodeError:
-                continue
-        raise DocumentExtractionError("Could not decode text file")
+        return _decode_text(data)
     raise DocumentExtractionError(f"Unsupported file type: {suffix}")

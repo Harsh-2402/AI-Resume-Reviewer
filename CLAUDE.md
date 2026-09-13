@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An **AI Internship Candidate Evaluation, Ranking & Reporting Platform**: a Streamlit app that takes a job description plus a ZIP of PDF resumes, analyzes every candidate through a LangGraph agent pipeline (Gemini for extraction/classification, Python for scoring), ranks them, shows live progress, and exports a multi-sheet Excel report.
+An **AI Internship Candidate Evaluation, Ranking & Reporting Platform**: a Streamlit app that takes a job description plus a ZIP of resumes (PDF/DOCX/TXT), analyzes every candidate through a LangGraph agent pipeline (Gemini for extraction/classification, Python for scoring), ranks them, shows live progress, and exports a multi-sheet Excel report.
 
 Product principle: this is an **internship** evaluator, not an experienced-hire ATS. Score demonstrated potential (education, coursework, projects, certifications, achievements, GitHub evidence, learning progression) — never years of experience, keyword density, commit counts, or university prestige. Missing information is neutral (N/A), never a penalty. No demographic signals.
 
@@ -47,7 +47,7 @@ app.py (Streamlit)  ──►  workflow/batch_graph.py  (LangGraph, streamed on 
 | Stage | Module | LLM | Output key |
 |---|---|---|---|
 | jd | `jd_analyzer.analyze_jd` | yes → `JobProfile` | `jd_profile` (batch) |
-| parser | `resume_parser` | no (PyPDF2) | `raw_text` |
+| parser | `resume_parser` | no (PyPDF2 / python-docx / text decode, by extension) | `raw_text` |
 | extractor | `information_extractor` | yes → `CandidateProfile`, then regex enrichment (email/phone/URLs, GitHub profile derived from repo URLs, `project_links`) | `profile` |
 | education | `education_analyzer` | yes → `EducationAnalysis` (degree relevance, academic strength, per-course relevance) | `education_analysis` |
 | skills | `skills_analyzer` | yes → `SkillsAnalysis` (per-skill Demonstrated/Claimed, per-JD-skill coverage; deterministic pre-match from `scoring/transferable.py` is passed as hints and back-fills anything the model skips) | `skills_analysis` |
@@ -82,7 +82,7 @@ Public REST only; `GITHUB_TOKEN` raises the limit from 60 to 5000 req/h. Per can
 
 ### UI (`app.py`, `ui/`)
 
-Phases in `st.session_state["phase"]`: `setup` (sidebar: JD upload/paste, ZIP upload, weights/concurrency, key indicators, Start) → `running` (`ProgressDashboard`: overall bar, current candidate stage checklist ✓●○⚠✗, per-agent counts, summary metrics, live ranking table, log, warnings/errors) → `done` (`ui/results.py`: summary + Excel download, Top 5/10 cards, full ranking table, candidate detail tabs, multi-candidate comparison, processing log, job profile). **New Evaluation** clears session state and the temp dir. ZIP bytes are extracted to a `tempfile.mkdtemp()` dir (`services/zip_service.extract_resumes`: nested dirs ok, skips `__MACOSX`/dotfiles/non-PDF/empty, zip-slip safe, sha256 duplicates). Use `width="stretch"` (not `use_container_width`) — Streamlit ≥ 1.45. Two Streamlit quirks are worked around deliberately: the setup page is exactly two top-level elements so the blocking `running` phase replaces them in place (otherwise prior-run elements linger until the script ends), and `ui/styles.inject_tab_resize_fix()` dispatches a window `resize` on tab clicks because dataframes inside initially-hidden tabs paint only their first column.
+Phases in `st.session_state["phase"]`: `setup` (sidebar: JD upload/paste, ZIP upload, weights/concurrency, key indicators, Start) → `running` (`ProgressDashboard`: overall bar, current candidate stage checklist ✓●○⚠✗, per-agent counts, summary metrics, live ranking table, log, warnings/errors) → `done` (`ui/results.py`: summary + Excel download, Top 5/10 cards, full ranking table, candidate detail tabs, multi-candidate comparison, processing log, job profile). **New Evaluation** clears session state and the temp dir. ZIP bytes are extracted to a `tempfile.mkdtemp()` dir (`services/zip_service.extract_resumes`: nested dirs ok, accepts `services/pdf_service.RESUME_EXTENSIONS` (pdf/docx/txt/md), skips `__MACOSX`/dotfiles/other types/empty with a reason, zip-slip safe, sha256 duplicates). The parser dispatches by extension via `pdf_service.extract_resume_text`; legacy `.doc` is rejected with a "save as .docx" reason. Use `width="stretch"` (not `use_container_width`) — Streamlit ≥ 1.45. Two Streamlit quirks are worked around deliberately: the setup page is exactly two top-level elements so the blocking `running` phase replaces them in place (otherwise prior-run elements linger until the script ends), and `ui/styles.inject_tab_resize_fix()` dispatches a window `resize` on tab clicks because dataframes inside initially-hidden tabs paint only their first column.
 
 ## Configuration (`config.py`, all env-overridable)
 

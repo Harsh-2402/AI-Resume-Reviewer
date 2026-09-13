@@ -17,6 +17,6 @@ def validate_batch_inputs(jd_text: str, pdf_count: int, weights: dict[str, float
     elif len(jd_text.strip()) < 40:
         errors.append("The job description is too short to analyze.")
     if pdf_count <= 0:
-        errors.append("The ZIP must contain at least one PDF resume.")
+        errors.append("The ZIP must contain at least one resume (PDF, DOCX or TXT).")
     errors.extend(validate_weights(weights))
     return errors

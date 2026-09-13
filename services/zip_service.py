@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from pathlib import Path, PurePosixPath
 
+from services.pdf_service import resume_skip_reason
+
 
 class ZipError(Exception):
     pass
@@ -55,7 +57,7 @@ def _is_hidden_or_system(parts: tuple[str, ...]) -> bool:
 
 
 def extract_resumes(zip_bytes: bytes, dest_dir: str) -> ZipExtractionResult:
-    """Extract PDF resumes from a ZIP (nested dirs ok). Never raises for a bad member — only for a bad ZIP."""
+    """Extract PDF/DOCX/TXT resumes from a ZIP (nested dirs ok). Never raises for a bad member — only for a bad ZIP."""
     result = ZipExtractionResult(extract_dir=dest_dir)
     dest = Path(dest_dir).resolve()
     dest.mkdir(parents=True, exist_ok=True)
@@ -78,8 +80,8 @@ def extract_resumes(zip_bytes: bytes, dest_dir: str) -> ZipExtractionResult:
             if _is_hidden_or_system(parts):
                 result.skipped.append((name, "hidden/system file"))
                 continue
-            if PurePosixPath(name).suffix.lower() != ".pdf":
-                result.skipped.append((name, "not a PDF"))
+            if reason := resume_skip_reason(name):
+                result.skipped.append((name, reason))
                 continue
             if member.file_size == 0:
                 result.skipped.append((name, "empty file"))

@@ -73,6 +73,17 @@ def make_pdf(text: str) -> bytes:
     return bytes(out)
 
 
+def make_docx(text: str) -> bytes:
+    from docx import Document
+
+    doc = Document()
+    for line in text.split("\n"):
+        doc.add_paragraph(line)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
 def make_zip(files: dict[str, bytes]) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:

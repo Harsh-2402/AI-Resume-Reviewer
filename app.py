@@ -8,7 +8,7 @@ import config
 from models.jd import JobProfile
 from models.result import CandidateResult
 from services import github_service, llm_service
-from services.pdf_service import DocumentExtractionError, extract_document_text
+from services.pdf_service import DocumentExtractionError, extract_document_text, resume_skip_reason
 from services.zip_service import ZipError, extract_resumes
 from ui.progress import ProgressDashboard
 from ui.results import (
@@ -75,7 +75,7 @@ with st.sidebar:
         st.caption(f"✓ JD loaded ({len(jd_text):,} characters)")
 
     st.subheader("2 · Resume batch")
-    zip_file = st.file_uploader("Upload ZIP of PDF resumes", type=["zip"], disabled=running)
+    zip_file = st.file_uploader("Upload ZIP of resumes (PDF / DOCX / TXT)", type=["zip"], disabled=running)
     pdf_count = 0
     if zip_file is not None:
         if st.session_state["zip_name"] != zip_file.name or st.session_state["zip_bytes"] is None:
@@ -87,9 +87,9 @@ with st.sidebar:
 
             with zipfile.ZipFile(io.BytesIO(st.session_state["zip_bytes"])) as zf:
                 names = [n for n in zf.namelist() if not n.endswith("/")]
-            pdfs = [n for n in names if n.lower().endswith(".pdf") and not any(p.startswith(".") or p == "__MACOSX" for p in n.split("/"))]
-            pdf_count = len(pdfs)
-            st.caption(f"✓ {len(names)} files found · {pdf_count} PDF resumes · {len(names) - pdf_count} will be skipped")
+            resumes = [n for n in names if not resume_skip_reason(n) and not any(p.startswith(".") or p == "__MACOSX" for p in n.split("/"))]
+            pdf_count = len(resumes)
+            st.caption(f"✓ {len(names)} files found · {pdf_count} resumes · {len(names) - pdf_count} will be skipped")
         except zipfile.BadZipFile:
             st.error("The uploaded file is not a valid ZIP archive.")
 
@@ -126,7 +126,7 @@ if start and st.session_state["phase"] == "setup":
         st.error(str(exc))
         st.stop()
     if extraction.valid_count == 0:
-        st.error("No valid PDF resumes were found in the ZIP.")
+        st.error("No valid resumes (PDF / DOCX / TXT) were found in the ZIP.")
         st.stop()
     st.session_state.update({
         "phase": "running", "jd_text": jd_text, "jd_source": jd_source, "workdir": workdir, "extraction": extraction,
@@ -146,7 +146,7 @@ if phase == "setup":
     # two slots, so nothing from this page lingers on screen while the evaluation blocks the script.
     st.markdown("""# AI Internship Candidate Evaluation & Ranking
 
-Upload a **job description** and a **ZIP of PDF resumes**. Every candidate is analyzed independently by a
+Upload a **job description** and a **ZIP of resumes** (PDF, DOCX or TXT). Every candidate is analyzed independently by a
 LangGraph pipeline — education, coursework, skills, projects, certifications, achievements, GitHub evidence —
 then scored deterministically, ranked, and exported to a multi-sheet Excel report.
 

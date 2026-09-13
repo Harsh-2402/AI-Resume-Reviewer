@@ -10,7 +10,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-Upload a job description + a ZIP of resumes → every candidate is analyzed, scored, ranked → download a 10-sheet Excel report.
+Upload a job description + a ZIP of resumes (PDF / DOCX / TXT) → every candidate is analyzed, scored, ranked → download a 10-sheet Excel report.
 
 </div>
 
@@ -18,7 +18,7 @@ Upload a job description + a ZIP of resumes → every candidate is analyzed, sco
 
 ## ✨ What it does
 
-- 📦 **Batch input** — a JD (PDF/DOCX/TXT or pasted) and a ZIP of PDF resumes (nested folders OK; junk files skipped; duplicates detected)
+- 📦 **Batch input** — a JD (PDF/DOCX/TXT or pasted) and a ZIP of resumes in PDF, DOCX or TXT (nested folders OK; junk files skipped; duplicates detected)
 - 🔍 **Deep per-candidate analysis** — education, coursework, technical skills, projects, certifications, achievements & hackathons, GitHub repositories, live project links
 - 🧾 **Evidence cross-checks** — resume claims vs. public GitHub evidence, reachable project links, credential pages (neutral wording, never accusations)
 - 🧮 **Deterministic internship scoring** — Gemini classifies, Python scores; every number has a written reason; missing areas are excluded, not penalized

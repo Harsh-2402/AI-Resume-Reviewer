@@ -1,27 +1,31 @@
 import pytest
 
 from services.zip_service import ZipError, extract_resumes
-from tests.conftest import make_pdf, make_zip
+from tests.conftest import make_docx, make_pdf, make_zip
 
 
-def test_extracts_pdfs_from_nested_dirs_and_skips_junk(tmp_path):
+def test_extracts_resumes_from_nested_dirs_and_skips_junk(tmp_path):
     pdf_a, pdf_b = make_pdf("Alice resume"), make_pdf("Bob resume")
     data = make_zip({
         "batch/alice.pdf": pdf_a,
         "batch/nested/deeper/bob.PDF": pdf_b,
+        "batch/carol.docx": make_docx("Carol resume"),
+        "batch/dave.txt": b"Dave resume",
         "__MACOSX/batch/._alice.pdf": b"junk",
         "batch/.DS_Store": b"junk",
-        "batch/notes.txt": b"hello",
+        "batch/sheet.xlsx": b"junk",
+        "batch/old.doc": b"junk",
         "batch/empty.pdf": b"",
     })
     result = extract_resumes(data, str(tmp_path))
-    assert result.total_found == 6
-    assert [f.candidate_id for f in result.files] == ["CAND-001", "CAND-002"]
-    assert {f.filename for f in result.files} == {"batch/alice.pdf", "batch/nested/deeper/bob.PDF"}
+    assert result.total_found == 9
+    assert [f.candidate_id for f in result.files] == ["CAND-001", "CAND-002", "CAND-003", "CAND-004"]
+    assert {f.filename for f in result.files} == {"batch/alice.pdf", "batch/carol.docx", "batch/dave.txt", "batch/nested/deeper/bob.PDF"}
     reasons = dict(result.skipped)
     assert reasons["__MACOSX/batch/._alice.pdf"] == "hidden/system file"
     assert reasons["batch/.DS_Store"] == "hidden/system file"
-    assert reasons["batch/notes.txt"] == "not a PDF"
+    assert reasons["batch/sheet.xlsx"] == "unsupported file type (.xlsx)"
+    assert reasons["batch/old.doc"].startswith("legacy .doc")
     assert reasons["batch/empty.pdf"] == "empty file"
     for f in result.files:
         assert (tmp_path / f"{f.candidate_id}_{f.filename.split('/')[-1]}").exists()
